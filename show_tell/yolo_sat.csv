@@ -1,0 +1,23 @@
+,img,yolo,sat
+0,000000001584.jpg,"['person', 'person', 'person', 'person', 'bus', 'bus', 'bus']",<start> a red and white bus driving down a street . <end>
+1,giraffe.jpg,"['zebra', 'giraffe', 'giraffe']",<start> a giraffe standing in a field next to a tree . <end>
+2,img4.jpg,"['chair', 'chair', 'chair', 'clock']","<start> a living room with a couch , table , and a table . <end>"
+3,000000001296.jpg,"['person', 'person', 'cell phone']",<start> a woman is eating a piece of cake on a table . <end>
+4,000000001503.jpg,"['tvmonitor', 'laptop', 'mouse', 'keyboard']",<start> a computer monitor sitting on a desk next to a keyboard . <end>
+5,000000001490.jpg,['person'],<start> a man is holding a surfboard in the ocean . <end>
+6,000000001353.jpg,"['person', 'person', 'person', 'person', 'person']",<start> a man and a woman sitting on a couch . <end>
+7,scream.jpg,[],<start> a pair of scissors sitting on a wooden table . <end>
+8,000000001818.jpg,['zebra'],<start> a zebra is standing in front of a building . <end>
+9,000000001425.jpg,"['bowl', 'sandwich']",<start> a plate with a piece of cake on it . <end>
+10,000000001761.jpg,"['aeroplane', 'aeroplane']",<start> a large bird flying over a body of water . <end>
+11,img3.jpg,"['car', 'car', 'car', 'car', 'car', 'car', 'car', 'truck', 'traffic light']",<start> a street scene with a traffic light and a street sign . <end>
+12,000000001993.jpg,"['chair', 'bed', 'diningtable', 'cell phone']",<start> a bed with a bed in a room . <end>
+13,messi.jpg,"['person', 'person', 'person', 'sports ball']",<start> a man is playing with a frisbee in a field . <end>
+14,000000001532.jpg,"['car', 'car', 'car', 'car', 'car', 'truck', 'truck']",<start> a street sign with a sign on the side of it . <end>
+15,person.jpg,"['person', 'dog', 'horse']",<start> a man and a dog are standing in a field . <end>
+16,img2.jpg,['train'],<start> a train is traveling down a track next to a building . <end>
+17,herd_of_horses.jpg,"['horse', 'horse', 'horse', 'horse']",<start> a group of cows in a field with a sky background <end>
+18,img1.jpg,"['person', 'dog']",<start> a man holding a white dog in his mouth . <end>
+19,eagle.jpg,['bird'],<start> a bird that is standing on a beach . <end>
+20,dog.jpg,"['bicycle', 'truck', 'dog']",<start> a dog sitting on a bench next to a bike . <end>
+21,000000001675.jpg,"['cat', 'laptop', 'keyboard']",<start> a black cat sitting on a black suitcase . <end>
