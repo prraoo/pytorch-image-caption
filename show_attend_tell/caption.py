@@ -10,6 +10,8 @@ import argparse
 from scipy.misc import imread, imresize
 from PIL import Image
 
+import pdb
+
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
@@ -41,81 +43,146 @@ def caption_image_beam_search(encoder, decoder, image_path, word_map, beam_size=
                                      std=[0.229, 0.224, 0.225])
     transform = transforms.Compose([normalize])
     image = transform(img)  # (3, 256, 256)
+    print("image: {}".format(image.size()))
+    #pdb.set_trace()
 
     # Encode
     image = image.unsqueeze(0)  # (1, 3, 256, 256)
     encoder_out = encoder(image)  # (1, enc_image_size, enc_image_size, encoder_dim)
+    #pdb.set_trace()
     enc_image_size = encoder_out.size(1)
     encoder_dim = encoder_out.size(3)
+    print("encoder_out: {}".format(encoder_out.size()))
+    #pdb.set_trace()
 
     # Flatten encoding
     encoder_out = encoder_out.view(1, -1, encoder_dim)  # (1, num_pixels, encoder_dim)
     num_pixels = encoder_out.size(1)
+    print("encoder_out: {}".format(encoder_out.size()))
+    #pdb.set_trace()
+
 
     # We'll treat the problem as having a batch size of k
     encoder_out = encoder_out.expand(k, num_pixels, encoder_dim)  # (k, num_pixels, encoder_dim)
+    print("encoder_out: {}".format(encoder_out.size()))
+    #pdb.set_trace()
+
 
     # Tensor to store top k previous words at each step; now they're just <start>
     k_prev_words = torch.LongTensor([[word_map['<start>']]] * k).to(device)  # (k, 1)
+    print("k_prev_words: {}".format(k_prev_words.size()))
+    print("init k_prev_words: {}".format(k_prev_words))
+    #pdb.set_trace()
+
 
     # Tensor to store top k sequences; now they're just <start>
     seqs = k_prev_words  # (k, 1)
+    print("init seqs: {}".format(seqs))
+    #pdb.set_trace()
+
 
     # Tensor to store top k sequences' scores; now they're just 0
     top_k_scores = torch.zeros(k, 1).to(device)  # (k, 1)
+    print("top_k_words: {}".format(top_k_scores))
+    #pdb.set_trace()
+
 
     # Tensor to store top k sequences' alphas; now they're just 1s
     seqs_alpha = torch.ones(k, 1, enc_image_size, enc_image_size).to(device)  # (k, 1, enc_image_size, enc_image_size)
+    print("seqs alpha: {}".format(seqs_alpha.size()))
+    #print("seqs alpha: {}".format(seqs_alpha))
+
 
     # Lists to store completed sequences, their alphas and scores
     complete_seqs = list()
     complete_seqs_alpha = list()
     complete_seqs_scores = list()
+    #pdb.set_trace()
+
 
     # Start decoding
     step = 1
     h, c = decoder.init_hidden_state(encoder_out)
+    print("hidden : {}, cell state: {}".format(h.size(),c.size()))
+    pdb.set_trace()
 
     # s is a number less than or equal to k, because sequences are removed from this process once they hit <end>
     while True:
-
+        print("*************** step = {} ************".format(step))
+        #convert words into embedding
         embeddings = decoder.embedding(k_prev_words).squeeze(1)  # (s, embed_dim)
+        print("embeddings.size: {}".format(embeddings.size()))
+        #pdb.set_trace()
 
         awe, alpha = decoder.attention(encoder_out, h)  # (s, encoder_dim), (s, num_pixels)
+        print("awe.size: {}, alpha size: {}".format(awe.size(), alpha.size()))
+        #pdb.set_trace()
 
         alpha = alpha.view(-1, enc_image_size, enc_image_size)  # (s, enc_image_size, enc_image_size)
+        print("alpha unwrapped :{}".format(alpha.size()))
+        #pdb.set_trace()
 
         gate = decoder.sigmoid(decoder.f_beta(h))  # gating scalar, (s, encoder_dim)
+        print("gate size : {}".format(gate.size()))
+        #pdb.set_trace()
         awe = gate * awe
+        print("gate * awe")
+        print("awe.size: {}".format(awe.size()))
+        #pdb.set_trace()
 
         h, c = decoder.decode_step(torch.cat([embeddings, awe], dim=1), (h, c))  # (s, decoder_dim)
+        print("LSTM CELL OUTPUT")
+        print("hidden : {}, cell state: {}".format(h.size(),c.size()))
+        #pdb.set_trace()
+
 
         scores = decoder.fc(h)  # (s, vocab_size)
+        print("score size {}".format(scores.size()))
+        #pdb.set_trace()
         scores = F.log_softmax(scores, dim=1)
+        print("scores size after softmax : {}".format(scores.size()))
 
         # Add
         scores = top_k_scores.expand_as(scores) + scores  # (s, vocab_size)
 
         # For the first step, all k points will have the same scores (since same k previous words, h, c)
+        pdb.set_trace()
         if step == 1:
             top_k_scores, top_k_words = scores[0].topk(k, 0, True, True)  # (s)
+            pdb.set_trace()
         else:
             # Unroll and find top scores, and their unrolled indices
             top_k_scores, top_k_words = scores.view(-1).topk(k, 0, True, True)  # (s)
+            print("scores size as view(-1) : {}".format(scores.view(-1).size()))
+            pdb.set_trace()
 
+        print(top_k_scores)
         # Convert unrolled indices to actual indices of scores
+        print("vocab size :{}".format(vocab_size))
+        print("top_k_scores\n{}\ntop_k_words\n{}".format(top_k_scores, top_k_words))
         prev_word_inds = top_k_words / vocab_size  # (s)
+        print("prev_word_inds = {}".format(prev_word_inds.size()))
+        print("prev_word_inds = {}".format(prev_word_inds))
+        pdb.set_trace()
         next_word_inds = top_k_words % vocab_size  # (s)
+        print("next_word_inds = {}".format(next_word_inds.size()))
+        print("next_word_inds = {}".format(next_word_inds))
+        pdb.set_trace()
 
         # Add new words to sequences, alphas
         seqs = torch.cat([seqs[prev_word_inds], next_word_inds.unsqueeze(1)], dim=1)  # (s, step+1)
         seqs_alpha = torch.cat([seqs_alpha[prev_word_inds], alpha[prev_word_inds].unsqueeze(1)],
                                dim=1)  # (s, step+1, enc_image_size, enc_image_size)
-
+        print("seq : {}".format(seqs))
         # Which sequences are incomplete (didn't reach <end>)?
         incomplete_inds = [ind for ind, next_word in enumerate(next_word_inds) if
                            next_word != word_map['<end>']]
         complete_inds = list(set(range(len(next_word_inds))) - set(incomplete_inds))
+
+        print("incomplete_inds: {}".format(incomplete_inds))
+        print("set of complete indices:",set(incomplete_inds))
+        print("set of indices range(len(nextwordidx))",set(range(len(next_word_inds))))
+        print("complete_inds: {}".format(complete_inds))
 
         # Set aside complete sequences
         if len(complete_inds) > 0:
@@ -123,6 +190,8 @@ def caption_image_beam_search(encoder, decoder, image_path, word_map, beam_size=
             complete_seqs_alpha.extend(seqs_alpha[complete_inds].tolist())
             complete_seqs_scores.extend(top_k_scores[complete_inds])
         k -= len(complete_inds)  # reduce beam length accordingly
+        print("length of beam search: {}".format(k))
+        pdb.set_trace()
 
         # Proceed with incomplete sequences
         if k == 0:
@@ -139,6 +208,7 @@ def caption_image_beam_search(encoder, decoder, image_path, word_map, beam_size=
         if step > 50:
             break
         step += 1
+        print("sequences :",seqs)
 
     i = complete_seqs_scores.index(max(complete_seqs_scores))
     seq = complete_seqs[i]
