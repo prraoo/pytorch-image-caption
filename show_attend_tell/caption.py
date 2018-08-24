@@ -83,7 +83,8 @@ def caption_image_beam_search(encoder, decoder, image_path, word_map, beam_size=
 
     # Tensor to store top k sequences' scores; now they're just 0
     top_k_scores = torch.zeros(k, 1).to(device)  # (k, 1)
-    print("top_k_words: {}".format(top_k_scores))
+    print("top_k_scores: {}".format(top_k_scores))
+    print("top_k_scores: {}".format(top_k_scores.size()))
     #pdb.set_trace()
 
 
